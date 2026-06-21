@@ -34,6 +34,8 @@ setup(
     entry_points={
         "console_scripts": [
             "rosa_summit = rosa_summit.rosa_summit:main",
+            "scan_republisher = rosa_summit.scan_republisher:main",
+            "safety_filter = rosa_summit.safety_filter:main",
         ],
     },
 )

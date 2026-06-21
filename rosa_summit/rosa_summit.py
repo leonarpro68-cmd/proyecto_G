@@ -3,6 +3,7 @@ from langchain_ollama import ChatOllama
 from langchain.agents import tool
 from rosa import ROSA
 from rosa.prompts import RobotSystemPrompts
+from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 import os
 import pathlib
 import time
@@ -47,8 +48,19 @@ def execute_ros_command(command: str) -> Tuple[bool, str]:
 # Helper function to get the maps directory
 def _get_maps_dir() -> str:
     """Gets the absolute path to the 'maps' directory in the rosa_summit package, creates it if it doesn't exist."""
-
-    maps_dir = "/home/ros/rap/Gruppe2/maps"
+    env_maps_dir = os.getenv("ROSA_SUMMIT_MAPS_DIR")
+    if env_maps_dir:
+        maps_dir = env_maps_dir
+    else:
+        try:
+            maps_dir = os.path.join(get_package_share_directory("rosa_summit"), "maps")
+        except PackageNotFoundError:
+            candidates = [
+                pathlib.Path.cwd() / "maps",
+                pathlib.Path(__file__).resolve().parents[2] / "maps",
+                pathlib.Path(__file__).resolve().parents[3] / "maps",
+            ]
+            maps_dir = str(next((p for p in candidates if p.is_dir()), candidates[0]))
     pathlib.Path(maps_dir).mkdir(parents=True, exist_ok=True)
     return maps_dir
 
@@ -325,7 +337,8 @@ def main():
             print("Using Anthropic API with Claude Sonnet 3.5")
             # Read API key from file
             try:
-                with open("/home/ros/rap/Gruppe2/api-key.txt", "r") as f:
+                api_key_path = os.path.expanduser("~/rap/Gruppe2/api-key.txt")
+                with open(api_key_path, "r") as f:
                     # Skip the comment line if it exists
                     api_key = f.read().strip().split("\n")[-1]
             except Exception as e:
@@ -333,7 +346,7 @@ def main():
                 return
 
             llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20240620",
+                model="claude-sonnet-4-6",
                 temperature=0,
                 anthropic_api_key=api_key,
                 max_tokens=4096,
@@ -373,9 +386,16 @@ def main():
 
             try:
                 print("Request sent")
-                res = agent.invoke(msg)[0]
-                if isinstance(res, dict) and "text" in res:
-                    print(res["text"])
+                res = agent.invoke(msg)
+                # res can be a list of content blocks or a plain string
+                if isinstance(res, list):
+                    for block in res:
+                        if isinstance(block, dict) and "text" in block:
+                            print(block["text"])
+                        elif isinstance(block, str) and len(block) > 1:
+                            print(block)
+                elif isinstance(res, str):
+                    print(res)
                 else:
                     print(res)
             except Exception as e:
@@ -383,7 +403,10 @@ def main():
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
 
-    agent.shutdown()
+    try:
+        agent.shutdown()
+    except AttributeError:
+        pass
     print("Bye from rosa_summit.")
 
 

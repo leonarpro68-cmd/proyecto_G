@@ -1,0 +1,114 @@
+diff --git a/summit_xl_description/urdf/ros2_control.urdf.xacro b/summit_xl_description/urdf/ros2_control.urdf.xacro
+index 46c9eef..2f48212 100644
+--- a/summit_xl_description/urdf/ros2_control.urdf.xacro
++++ b/summit_xl_description/urdf/ros2_control.urdf.xacro
+@@ -1,52 +1,79 @@
+ <?xml version="1.0"?>
+ <robot xmlns:xacro="http://wiki.ros.org/xacro">
+   <xacro:macro name="ros2_control">
++
++      <!-- VelocityControl: moves the robot base directly (bypasses omni-wheel physics) -->
+       <gazebo>
+-        <plugin name="ros_control" filename="libgazebo_ros2_control.so">
+-          <namespace>$(arg robot_id)</namespace>
++        <plugin filename="ignition-gazebo-velocity-control-system"
++                name="ignition::gazebo::systems::VelocityControl">
++          <topic>model/summit/cmd_vel</topic>
++        </plugin>
++      </gazebo>
++
++      <!-- OdometryPublisher: publishes odom + TF from Ignition physics engine -->
++      <gazebo>
++        <plugin filename="ignition-gazebo-odometry-publisher-system"
++                name="ignition::gazebo::systems::OdometryPublisher">
++          <odom_frame>odom</odom_frame>
++          <robot_base_frame>base_footprint</robot_base_frame>
++          <odom_topic>model/summit/odom</odom_topic>
++          <tf_topic>tf</tf_topic>
++          <odom_publish_frequency>50</odom_publish_frequency>
++        </plugin>
++      </gazebo>
++
++      <!-- Joint state publisher for all joints -->
++      <gazebo>
++        <plugin filename="ignition-gazebo-joint-state-publisher-system"
++                name="ignition::gazebo::systems::JointStatePublisher">
++          <topic>model/summit/joint_states</topic>
++        </plugin>
++      </gazebo>
++
++      <!-- gz_ros2_control: only for arm joints (hold position) -->
++      <gazebo>
++        <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system.so">
+           <parameters>$(arg config_controllers)</parameters>
++          <ros>
++            <namespace>$(arg robot_id)</namespace>
++          </ros>
+         </plugin>
+       </gazebo>
+-      <ros2_control name="robotnik_base_hw" type="system">
++      <ros2_control name="arm_hw" type="system">
+         <hardware>
+-          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
++          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+         </hardware>
+-        <joint name="front_left_wheel_joint">
+-          <command_interface name="velocity">
+-            <param name="min">-10</param>
+-            <param name="max">10</param>
+-          </command_interface>
++        <joint name="arm_shoulder_pan_joint">
++          <command_interface name="position"/>
++          <state_interface name="position"/>
++          <state_interface name="velocity"/>
++        </joint>
++        <joint name="arm_shoulder_lift_joint">
++          <command_interface name="position"/>
++          <state_interface name="position"/>
++          <state_interface name="velocity"/>
++        </joint>
++        <joint name="arm_elbow_joint">
++          <command_interface name="position"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+-          <state_interface name="effort"/>
+         </joint>
+-        <joint name="front_right_wheel_joint">
+-          <command_interface name="velocity">
+-            <param name="min">-10</param>
+-            <param name="max">10</param>
+-          </command_interface>
++        <joint name="arm_wrist_1_joint">
++          <command_interface name="position"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+-          <state_interface name="effort"/>
+         </joint>
+-        <joint name="rear_left_wheel_joint">
+-          <command_interface name="velocity">
+-            <param name="min">-10</param>
+-            <param name="max">10</param>
+-          </command_interface>
++        <joint name="arm_wrist_2_joint">
++          <command_interface name="position"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+-          <state_interface name="effort"/>
+         </joint>
+-        <joint name="rear_right_wheel_joint">
+-          <command_interface name="velocity">
+-            <param name="min">-10</param>
+-            <param name="max">10</param>
+-          </command_interface>
++        <joint name="arm_wrist_3_joint">
++          <command_interface name="position"/>
+           <state_interface name="position"/>
+           <state_interface name="velocity"/>
+-          <state_interface name="effort"/>
+         </joint>
+       </ros2_control>
++
+   </xacro:macro>
+-</robot>
+\ No newline at end of file
++</robot>

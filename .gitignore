@@ -1,3 +1,22 @@
+# Credenciales
 api-key.txt
+
+# Python
 **/__pycache__/
+*.pyc
 *.ikcache
+
+# Artefactos de colcon / ROS
+/build/
+/install/
+/log/
+/.ros/
+
+# Dependencias externas: se clonan y parchean con init.sh (ver patches/)
+/src/
+
+# Artefactos de debug de TF
+frames_*.gv
+frames_*.pdf
+frames.gv
+frames.pdf

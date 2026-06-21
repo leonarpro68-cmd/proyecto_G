@@ -18,6 +18,15 @@ It is intended to be used inside a Container running a specific ROS 2 image. (ro
     source ~/rap/Gruppe2/init.sh
     ```
 
+> **Nota de migración (Humble → Jazzy).** Las dependencias externas viven en `src/`
+> y **no** se versionan en este repo: `init.sh` las clona fijando un commit concreto
+> (probado en Humble) y reaplica automáticamente las modificaciones locales guardadas
+> en `patches/` (`icclab_summit_xl.patch`, `summit_xl_common.patch`).
+> Al portar a Jazzy, si un parche no aplica limpio `init.sh` avisa y continúa; en ese
+> caso revisa el `.patch` correspondiente y reaplica los cambios a mano sobre la rama
+> Jazzy de esa dependencia. Los directorios `build/`, `install/`, `log/`, `.ros/` y
+> `src/` se regeneran y están en `.gitignore`.
+
 ## Dependencies
 
 All required ROS 2 packages and Python libraries are automatically installed when you source the `init.sh` script. This script performs the following key dependency management tasks:
